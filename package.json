@@ -1,0 +1,27 @@
+{
+  "name": "casa-financas",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "css": "tailwindcss -i ./public/css/main.css -o ./public/css/output.css --watch",
+    "dev": "shadow-cljs watch app",
+    "build": "shadow-cljs release app"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "autoprefixer": "^10.4.24",
+    "postcss": "^8.5.6",
+    "shadow-cljs": "^3.3.6",
+    "tailwindcss": "^3.4.19"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.97.0",
+    "lucide-react": "^0.575.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  }
+}
