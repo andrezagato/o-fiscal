@@ -14,4 +14,8 @@
    :entradas-historico   []
    :modal                nil
    :loading              false
-   :erro                 nil})
+   :erro                 nil
+   :configuracoes {"cor_andre"    "#3B82F6"
+                   "cor_bianca"   "#EC4899"
+                   "cor_fernanda" "#14B8A6"
+                   "cor_bruna"    "#F97316"}})

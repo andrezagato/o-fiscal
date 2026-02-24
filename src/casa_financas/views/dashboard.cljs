@@ -50,7 +50,7 @@
       [:div {:class "flex justify-between text-gray-500"}
        [:span "Previsto"] [:span (u/formatar-valor-br previsto)]]
       [:div {:class "flex justify-between text-gray-400"}
-       [:span "Saldo Anterior"] [:span {:class (if (>= saldo-ant 0) "text-green-600" "text-red-500")}
+       [:span "Saldo Ant."] [:span {:class (if (>= saldo-ant 0) "text-green-600" "text-red-500")}
         (u/formatar-valor-br saldo-ant)]]]]))
 
 (defn dashboard []

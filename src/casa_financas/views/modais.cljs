@@ -111,6 +111,7 @@
 ;; -- Modal despesa --
 (defn modal-despesa [dados]
   (let [mes-atual @(rf/subscribe [:mes-atual])
+        aberto-cat?  (r/atom false)
         data-default (dia-para-date (u/dia-hoje) (:mes mes-atual) (:ano mes-atual))
         form (r/atom (merge {:descricao       ""
                              :valor           ""
@@ -119,24 +120,50 @@
                              :forma_pagamento "pix"
                              :pagadores       ["conjunta"]
                              :divisao         (u/divisao-padrao)
-                             :pago            false}
+                             :pago            false
+                             :categoria_id    nil
+                             :categoria_nome  nil}
                             (when (:dia_do_mes dados)
                               {:data_input (dia-para-date (:dia_do_mes dados)
                                                           (:mes mes-atual)
                                                           (:ano mes-atual))})
                             dados))]
     (fn []
-      (let [soma-ok? (= (u/soma-divisao (:divisao @form)) 100)]
+      (let [soma-ok?   (= (u/soma-divisao (:divisao @form)) 100)
+            categorias @(rf/subscribe [:categorias])
+            cat-atual  (first (filter #(= (:id %) (:categoria_id @form)) categorias))]
         [c/modal-wrapper
          (if (:id @form) "Editar Despesa" "Nova Despesa")
          [:div {:class "space-y-3"}
 
-          ;; Descrição
-          [:input {:type        "text"
-                   :class       "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
-                   :placeholder "Descrição (ex: Mercado, Aluguel...)"
-                   :value       (:descricao @form)
-                   :on-change   #(swap! form assoc :descricao (.. % -target -value))}]
+          ;; Descrição + Categoria
+          [:div {:class "flex gap-2"}
+           [:input {:type        "text"
+                    :class       "flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    :placeholder "Descrição (ex: Mercado, Aluguel...)"
+                    :value       (:descricao @form)
+                    :on-change   #(swap! form assoc :descricao (.. % -target -value))}]
+           [:div {:class "relative flex-shrink-0"}
+            [:button {:class    "h-full px-3 border border-gray-200 rounded-xl text-sm transition-colors bg-white"
+                      :on-click #(swap! aberto-cat? not)}
+             (if cat-atual (:emoji cat-atual) "📂")]
+            (when @aberto-cat?
+              [:div {:class "absolute right-0 top-12 bg-white rounded-2xl shadow-lg border border-gray-100 p-2 z-50 w-52"}
+               [:button {:class    "w-full text-left px-3 py-2 rounded-xl text-xs text-gray-500"
+                         :on-click #(do (swap! form assoc :categoria_id nil :categoria_nome nil)
+                                        (reset! aberto-cat? false))}
+                "— Sem categoria"]
+               (for [cat categorias]
+                 ^{:key (:id cat)}
+                 [:button {:class    (str "w-full text-left px-3 py-2 rounded-xl text-xs "
+                                          (if (= (:id cat) (:categoria_id @form))
+                                            "bg-blue-50 text-blue-600 font-medium"
+                                            "text-gray-700"))
+                           :on-click #(do (swap! form assoc
+                                                 :categoria_id (:id cat)
+                                                 :categoria_nome (:nome cat))
+                                          (reset! aberto-cat? false))}
+                  (str (:emoji cat) " " (:nome cat))])])]]
 
           ;; Valor + Data
           [:div {:class "flex gap-2"}
@@ -285,9 +312,9 @@
                                  :valor (js/parseFloat (:valor @form))})])
           {:class "flex-1"}]]]])))
 
-;; -- Modal template --
 (defn modal-template [dados]
   (let [mes-atual @(rf/subscribe [:mes-atual])
+        aberto-cat? (r/atom false)
         form (r/atom (merge {:descricao              ""
                              :valor_padrao           ""
                              :forma_pagamento_padrao "pix"
@@ -295,19 +322,46 @@
                              :divisao                (u/divisao-padrao)
                              :data_input             (dia-para-date 1 (:mes mes-atual) (:ano mes-atual))
                              :dia_padrao             1
-                             :ativo                  true}
+                             :ativo                  true
+                             :categoria_id           nil
+                             :categoria_nome         nil}
                             dados))]
     (fn []
-      (let [soma-ok? (= (u/soma-divisao (:divisao @form)) 100)]
+      (let [soma-ok?   (= (u/soma-divisao (:divisao @form)) 100)
+            categorias @(rf/subscribe [:categorias])
+            cat-atual  (first (filter #(= (:id %) (:categoria_id @form)) categorias))]
         [c/modal-wrapper
          (if (:id @form) "Editar Template" "Novo Template")
          [:div {:class "space-y-3"}
 
-          [:input {:type        "text"
-                   :class       "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
-                   :placeholder "Descrição (ex: Aluguel, Internet...)"
-                   :value       (:descricao @form)
-                   :on-change   #(swap! form assoc :descricao (.. % -target -value))}]
+          ;; Descrição + Categoria
+          [:div {:class "flex gap-2"}
+           [:input {:type        "text"
+                    :class       "flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    :placeholder "Descrição (ex: Aluguel, Internet...)"
+                    :value       (:descricao @form)
+                    :on-change   #(swap! form assoc :descricao (.. % -target -value))}]
+           [:div {:class "relative flex-shrink-0"}
+            [:button {:class    "h-full px-3 border border-gray-200 rounded-xl text-sm bg-white"
+                      :on-click #(swap! aberto-cat? not)}
+             (if cat-atual (:emoji cat-atual) "📂")]
+            (when @aberto-cat?
+              [:div {:class "absolute right-0 top-12 bg-white rounded-2xl shadow-lg border border-gray-100 p-2 z-50 w-52"}
+               [:button {:class    "w-full text-left px-3 py-2 rounded-xl text-xs text-gray-500"
+                         :on-click #(do (swap! form assoc :categoria_id nil :categoria_nome nil)
+                                        (reset! aberto-cat? false))}
+                "— Sem categoria"]
+               (for [cat categorias]
+                 ^{:key (:id cat)}
+                 [:button {:class    (str "w-full text-left px-3 py-2 rounded-xl text-xs "
+                                          (if (= (:id cat) (:categoria_id @form))
+                                            "bg-blue-50 text-blue-600 font-medium"
+                                            "text-gray-700"))
+                           :on-click #(do (swap! form assoc
+                                                 :categoria_id (:id cat)
+                                                 :categoria_nome (:nome cat))
+                                          (reset! aberto-cat? false))}
+                  (str (:emoji cat) " " (:nome cat))])])]]
 
           ;; Valor + Data
           [:div {:class "flex gap-2"}
@@ -345,7 +399,7 @@
                       :on-click #(swap! form assoc :forma_pagamento_padrao "credito")}
              "💳 Crédito"]]]
 
-          ;; Quem paga + Ativo na mesma linha
+          ;; Quem paga + Ativo
           [:div {:class "flex items-end justify-between"}
            [:div
             [:label {:class "text-xs font-medium text-gray-500 mb-1.5 block"} "Quem paga?"]

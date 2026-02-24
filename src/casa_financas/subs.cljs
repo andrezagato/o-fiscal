@@ -108,3 +108,20 @@
                                      (* (:valor d) (/ pct 100))))
                                  despesas))]
      (- total-entr debitos))))
+
+(rf/reg-sub
+ :configuracoes
+ (fn [db _]
+   (:configuracoes db)))
+
+(rf/reg-sub
+ :cor-pessoa
+ :<- [:configuracoes]
+ (fn [configs [_ pessoa-id]]
+   (get configs (str "cor_" pessoa-id)
+        (case pessoa-id
+          "andre"    "#3B82F6"
+          "bianca"   "#EC4899"
+          "fernanda" "#14B8A6"
+          "bruna"    "#F97316"
+          "#9CA3AF"))))

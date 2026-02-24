@@ -58,7 +58,9 @@
                  :divisao_bruna      (get-in despesa [:divisao :bruna] 0)
                  :pago               (:pago despesa)
                  :data_pagamento     (:data_pagamento despesa)
-                 :origem_template_id (:origem_template_id despesa)}]
+                 :origem_template_id (:origem_template_id despesa)
+                 :categoria_id       (:categoria_id despesa)
+                 :categoria_nome     (:categoria_nome despesa)}]
     (-> (.from client "despesa_mensal")
         (.upsert row)
         (.then #(callback nil))
@@ -124,7 +126,9 @@
                  :divisao_bianca          (get-in template [:divisao :bianca] 0)
                  :divisao_fernanda        (get-in template [:divisao :fernanda] 0)
                  :divisao_bruna           (get-in template [:divisao :bruna] 0)
-                 :ativo                   (:ativo template)}]
+                 :ativo                   (:ativo template)
+                 :categoria_id            (:categoria_id template)
+                 :categoria_nome          (:categoria_nome template)}]
     (-> (.from client "template_despesa")
         (.upsert row)
         (.then #(callback nil))
@@ -181,3 +185,37 @@
                                    (update e :valor #(js/parseFloat %)))
                                  data)))))
       (.catch #(js/console.error "Erro ao buscar historico entradas" %))))
+
+(defn buscar-configuracoes! [callback]
+  (-> (.from client "configuracoes")
+      (.select "*")
+      (.then (fn [res]
+               (let [data (js->clj (.-data res) :keywordize-keys true)]
+                 (callback (reduce (fn [acc item]
+                                     (assoc acc (:chave item) (:valor item)))
+                                   {}
+                                   data)))))
+      (.catch #(js/console.error "Erro ao buscar configuracoes" %))))
+
+(defn salvar-configuracao! [chave valor callback]
+  (-> (.from client "configuracoes")
+      (.upsert #js {:chave chave :valor valor})
+      (.then #(callback))
+      (.catch #(js/console.error "Erro ao salvar configuracao" %))))
+
+
+(defn buscar-categorias! [callback]
+  (-> (.from client "categorias")
+      (.select "*")
+      (.order "ordem")
+      (.then (fn [res]
+               (callback (js->clj (.-data res) :keywordize-keys true))))
+      (.catch #(js/console.error "Erro ao buscar categorias" %))))
+
+(defn salvar-categoria! [categoria callback]
+  (-> (.from client "categorias")
+      (.insert #js {:nome  (:nome categoria)
+                    :emoji (:emoji categoria)
+                    :ordem (:ordem categoria)})
+      (.then #(callback))
+      (.catch #(js/console.error "Erro ao salvar categoria" %))))

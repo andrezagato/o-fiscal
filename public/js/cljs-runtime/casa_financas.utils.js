@@ -35,9 +35,9 @@ return new cljs.core.Keyword(null,"pendente","pendente",311658061);
 }
 });
 casa_financas.utils.status_cor = (function casa_financas$utils$status_cor(status){
-var G__12565 = status;
-var G__12565__$1 = (((G__12565 instanceof cljs.core.Keyword))?G__12565.fqn:null);
-switch (G__12565__$1) {
+var G__17021 = status;
+var G__17021__$1 = (((G__17021 instanceof cljs.core.Keyword))?G__17021.fqn:null);
+switch (G__17021__$1) {
 case "paga":
 return "bg-green-50 border-green-200";
 
@@ -51,13 +51,24 @@ return "bg-amber-50 border-amber-200";
 
 break;
 default:
-throw (new Error((""+"No matching clause: "+cljs.core.str.cljs$core$IFn$_invoke$arity$1(G__12565__$1))));
+throw (new Error((""+"No matching clause: "+cljs.core.str.cljs$core$IFn$_invoke$arity$1(G__17021__$1))));
 
 }
 });
+casa_financas.utils.cores_pessoas = reagent.core.atom.cljs$core$IFn$_invoke$arity$1(new cljs.core.PersistentArrayMap(null, 4, ["cor_andre","#3B82F6","cor_bianca","#EC4899","cor_fernanda","#14B8A6","cor_bruna","#F97316"], null));
+casa_financas.utils.reset_cores_BANG_ = (function casa_financas$utils$reset_cores_BANG_(configs){
+return cljs.core.reset_BANG_(casa_financas.utils.cores_pessoas,configs);
+});
 casa_financas.utils.pessoa_cor = (function casa_financas$utils$pessoa_cor(pessoa_id){
-var G__12566 = pessoa_id;
-switch (G__12566) {
+var G__17022 = pessoa_id;
+switch (G__17022) {
+case "conjunta":
+return "#8B5CF6";
+
+break;
+default:
+return cljs.core.get.cljs$core$IFn$_invoke$arity$3(cljs.core.deref(casa_financas.utils.cores_pessoas),(""+"cor_"+cljs.core.str.cljs$core$IFn$_invoke$arity$1(pessoa_id)),(function (){var G__17023 = pessoa_id;
+switch (G__17023) {
 case "andre":
 return "#3B82F6";
 
@@ -74,18 +85,17 @@ case "bruna":
 return "#F97316";
 
 break;
-case "conjunta":
-return "#8B5CF6";
-
-break;
 default:
 return "#9CA3AF";
 
 }
+})());
+
+}
 });
 casa_financas.utils.pessoa_nome = (function casa_financas$utils$pessoa_nome(pessoa_id){
-var G__12567 = pessoa_id;
-switch (G__12567) {
+var G__17024 = pessoa_id;
+switch (G__17024) {
 case "andre":
 return "Andr\u00E9";
 
@@ -112,8 +122,8 @@ return "?";
 }
 });
 casa_financas.utils.pessoa_inicial = (function casa_financas$utils$pessoa_inicial(pessoa_id){
-var G__12568 = pessoa_id;
-switch (G__12568) {
+var G__17025 = pessoa_id;
+switch (G__17025) {
 case "andre":
 return "A";
 

@@ -6362,6 +6362,7 @@ ShadowJS.prototype.initializePromise;
 ShadowJS.prototype.innerHTML;
 ShadowJS.prototype.input;
 ShadowJS.prototype.insecureUserWarningProxy;
+ShadowJS.prototype.insert;
 ShadowJS.prototype.inspect;
 ShadowJS.prototype.instance;
 ShadowJS.prototype.instanceID;

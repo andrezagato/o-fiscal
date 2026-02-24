@@ -1,4 +1,5 @@
-(ns casa-financas.utils)
+(ns casa-financas.utils
+  (:require [reagent.core :as r]))
 
 (def meses-nomes
   ["" "Janeiro" "Fevereiro" "Março" "Abril" "Maio" "Junho"
@@ -34,14 +35,24 @@
     :vencida  "bg-red-50 border-red-200"
     :pendente "bg-amber-50 border-amber-200"))
 
+(def cores-pessoas (r/atom {"cor_andre"    "#3B82F6"
+                                "cor_bianca"   "#EC4899"
+                                "cor_fernanda" "#14B8A6"
+                                "cor_bruna"    "#F97316"}))
+
+(defn reset-cores! [configs]
+  (reset! cores-pessoas configs))
+
 (defn pessoa-cor [pessoa-id]
   (case pessoa-id
-    "andre"      "#3B82F6"
-    "bianca"     "#EC4899"
-    "fernanda"   "#14B8A6"
-    "bruna"      "#F97316"
-    "conjunta"   "#8B5CF6"
-    "#9CA3AF"))
+    "conjunta" "#8B5CF6"
+    (get @cores-pessoas (str "cor_" pessoa-id)
+         (case pessoa-id
+           "andre"    "#3B82F6"
+           "bianca"   "#EC4899"
+           "fernanda" "#14B8A6"
+           "bruna"    "#F97316"
+           "#9CA3AF"))))
 
 (defn pessoa-nome [pessoa-id]
   (case pessoa-id

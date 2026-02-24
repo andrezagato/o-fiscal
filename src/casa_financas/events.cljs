@@ -1,7 +1,8 @@
 (ns casa-financas.events
   (:require [re-frame.core :as rf]
             [casa-financas.db :as db]
-            [casa-financas.supabase :as supa]))
+            [casa-financas.supabase :as supa]
+            [casa-financas.utils :as u]))
 
 ;; -- Init --
 (rf/reg-event-fx
@@ -16,11 +17,6 @@
  (fn [{:keys [db]} _]
    {:db db
     :supabase/sessao nil}))
-
-(rf/reg-event-db
- :set-usuario
- (fn [db [_ usuario]]
-   (assoc db :usuario-atual usuario)))
 
 (rf/reg-event-fx
  :login
@@ -53,7 +49,9 @@
       :supabase/buscar-despesas {:ano (:ano mes) :mes (:mes mes)}
       :supabase/buscar-entradas {:ano (:ano mes) :mes (:mes mes)}
       :supabase/buscar-templates nil
-      :supabase/buscar-historico nil})))
+      :supabase/buscar-historico nil
+      :supabase/buscar-configuracoes nil
+      :supabase/buscar-categorias nil})))
 
 ;; -- Navegação --
 (rf/reg-event-db
@@ -113,10 +111,6 @@
           :despesas-historico despesas
           :entradas-historico entradas)))
 
-(rf/reg-event-db
- :set-loading
- (fn [db [_ v]]
-   (assoc db :loading v)))
 
 (rf/reg-event-db
  :set-erro
@@ -426,3 +420,53 @@
  (fn [events]
    (doseq [e events]
      (rf/dispatch e))))
+
+(rf/reg-fx
+ :supabase/buscar-configuracoes
+ (fn [_]
+   (supa/buscar-configuracoes!
+    (fn [configs]
+      (rf/dispatch [:set-configuracoes configs])))))
+
+(rf/reg-event-db
+ :set-configuracoes
+ (fn [db [_ configs]]
+   (u/reset-cores! configs)
+   (assoc db :configuracoes configs)))
+
+(rf/reg-event-fx
+ :salvar-cor-pessoa
+ (fn [{:keys [db]} [_ pessoa-id cor]]
+   (let [chave (str "cor_" pessoa-id)]
+     (swap! u/cores-pessoas assoc chave cor)
+     {:db (assoc-in db [:configuracoes chave] cor)
+      :supabase/salvar-configuracao {:chave chave :valor cor}})))
+
+(rf/reg-fx
+ :supabase/salvar-configuracao
+ (fn [{:keys [chave valor]}]
+   (supa/salvar-configuracao! chave valor
+                              (fn [] (js/console.log "Configuração salva")))))
+
+(rf/reg-fx
+ :supabase/buscar-categorias
+ (fn [_]
+   (supa/buscar-categorias!
+    (fn [cats]
+      (rf/dispatch [:set-categorias cats])))))
+
+(rf/reg-event-db
+ :set-categorias
+ (fn [db [_ cats]]
+   (assoc db :categorias cats)))
+
+(rf/reg-event-fx
+ :salvar-categoria
+ (fn [{:keys [db]} [_ categoria]]
+   {:supabase/salvar-categoria categoria}))
+
+(rf/reg-fx
+ :supabase/salvar-categoria
+ (fn [categoria]
+   (supa/salvar-categoria! categoria
+                           (fn [] (rf/dispatch [:carregar-dados])))))
