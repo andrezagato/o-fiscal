@@ -60,7 +60,9 @@
                  :data_pagamento     (:data_pagamento despesa)
                  :origem_template_id (:origem_template_id despesa)
                  :categoria_id       (:categoria_id despesa)
-                 :categoria_nome     (:categoria_nome despesa)}]
+                 :categoria_nome     (:categoria_nome despesa)
+                 :mes_compra         (:mes_compra despesa)
+                 :ano_compra         (:ano_compra despesa)}]
     (-> (.from client "despesa_mensal")
         (.upsert row)
         (.then #(callback nil))
@@ -219,3 +221,37 @@
                     :ordem (:ordem categoria)})
       (.then #(callback))
       (.catch #(js/console.error "Erro ao salvar categoria" %))))
+
+(defn buscar-fatura! [ano mes callback]
+  (-> (.from client "fatura_cartao")
+      (.select "*")
+      (.eq "ano" ano)
+      (.eq "mes" mes)
+      (.then (fn [res]
+               (let [data (js->clj (.-data res) :keywordize-keys true)]
+                 (callback (first data)))))
+      (.catch #(js/console.error "Erro ao buscar fatura" %))))
+
+(defn salvar-fatura! [fatura callback]
+  (let [row #js {:id              (:id fatura)
+                 :ano             (:ano fatura)
+                 :mes             (:mes fatura)
+                 :valor_total     (:valor_total fatura)
+                 :valor_pago      (:valor_pago fatura)
+                 :divisao_andre   (:divisao_andre fatura)
+                 :divisao_bianca  (:divisao_bianca fatura)
+                 :divisao_fernanda (:divisao_fernanda fatura)
+                 :divisao_bruna   (:divisao_bruna fatura)}]
+    (-> (.from client "fatura_cartao")
+        (.upsert row)
+        (.then #(callback nil))
+        (.catch #(callback {:error %})))))
+
+(defn desmarcar-creditos! [ano mes callback]
+  (-> (.from client "despesa_mensal")
+      (.update #js {:pago false :data_pagamento nil})
+      (.eq "ano" ano)
+      (.eq "mes" mes)
+      (.eq "forma_pagamento" "credito")
+      (.then #(callback nil))
+      (.catch #(callback {:error %}))))

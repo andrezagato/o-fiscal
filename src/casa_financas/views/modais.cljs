@@ -114,20 +114,21 @@
         aberto-cat?  (r/atom false)
         data-default (dia-para-date (u/dia-hoje) (:mes mes-atual) (:ano mes-atual))
         form (r/atom (merge {:descricao       ""
-                             :valor           ""
-                             :data_input      data-default
-                             :dia_do_mes      (u/dia-hoje)
-                             :forma_pagamento "pix"
-                             :pagadores       ["conjunta"]
-                             :divisao         (u/divisao-padrao)
-                             :pago            false
-                             :categoria_id    nil
-                             :categoria_nome  nil}
-                            (when (:dia_do_mes dados)
-                              {:data_input (dia-para-date (:dia_do_mes dados)
-                                                          (:mes mes-atual)
-                                                          (:ano mes-atual))})
-                            dados))]
+                              :valor           ""
+                              :data_input      data-default
+                              :dia_do_mes      (u/dia-hoje)
+                              :forma_pagamento "pix"
+                              :pagadores       ["conjunta"]
+                              :divisao         (u/divisao-padrao)
+                              :pago            false
+                              :categoria_id    nil
+                              :categoria_nome  nil}
+                             (when (:dia_do_mes dados)
+                               {:data_input (dia-para-date
+                                             (:dia_do_mes dados)
+                                             (or (:mes_compra dados) (:mes mes-atual))
+                                             (or (:ano_compra dados) (:ano mes-atual)))})
+                             dados))]
     (fn []
       (let [soma-ok?   (= (u/soma-divisao (:divisao @form)) 100)
             categorias @(rf/subscribe [:categorias])
@@ -182,7 +183,10 @@
              (fn [v]
                (swap! form assoc
                       :data_input v
-                      :dia_do_mes (or (date-para-dia v) (u/dia-hoje))))]]]
+                      :dia_do_mes (or (date-para-dia v) (u/dia-hoje))
+                      ;; Limpa mes_compra e ano_compra para recalcular
+                      :mes_compra nil
+                      :ano_compra nil))]]]
 
           ;; Forma pagamento
           [:div
@@ -438,6 +442,44 @@
                                                         :valor_padrao (js/parseFloat (:valor_padrao @form))})]))}
             "Salvar"]]]]))))
 
+(defn modal-pagamento-fatura [fatura]
+  (let [total-credito @(rf/subscribe [:total-credito-mes])
+        form (r/atom {:valor_pago (str (or (:valor_pago fatura) ""))})]
+    (fn []
+      [c/modal-wrapper "💳 Pagar Fatura"
+       [:div {:class "space-y-3"}
+        [:div {:class "bg-gray-50 rounded-xl p-3"}
+         [:p {:class "text-xs text-gray-500 mb-1"} "Total da fatura"]
+         [:p {:class "text-xl font-bold text-gray-800"}
+          (u/formatar-valor-br total-credito)]]
+        [:div
+         [:label {:class "text-xs font-medium text-gray-500 mb-1 block"} "Valor pago (R$)"]
+         [:input {:type        "number"
+                  :inputMode   "decimal"
+                  :class       "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  :placeholder "0,00"
+                  :value       (:valor_pago @form)
+                  :on-change   #(swap! form assoc :valor_pago (.. % -target -value))}]]
+        [:div {:class "flex gap-2"}
+         [:button {:class    "flex-1 py-2 rounded-xl text-xs font-medium bg-gray-50 text-gray-600 border border-gray-200"
+                   :on-click #(swap! form assoc :valor_pago (str total-credito))}
+          "Pagar total"]
+         [:button {:class    "flex-1 py-2 rounded-xl text-xs font-medium bg-gray-50 text-gray-600 border border-gray-200"
+                   :on-click #(swap! form assoc :valor_pago "")}
+          "Limpar"]]
+        ;; Botão remover pagamento (quando já tem pagamento)
+        (when (and fatura (:valor_pago fatura) (> (:valor_pago fatura) 0))
+          [:button {:class    "w-full py-2 rounded-xl text-xs font-medium text-red-500 bg-red-50 border border-red-100"
+                    :on-click #(do (rf/dispatch [:desmarcar-fatura])
+                                   (rf/dispatch [:fechar-modal]))}
+           "Remover pagamento"])
+        [:div {:class "flex gap-2 pt-1"}
+         [c/botao-secundario "Cancelar" #(rf/dispatch [:fechar-modal]) {:class "flex-1"}]
+         [c/botao-primario "Salvar"
+          #(rf/dispatch [:salvar-pagamento-fatura
+                         (js/parseFloat (:valor_pago @form))])
+          {:class "flex-1"}]]]])))
+
 ;; -- Dispatcher --
 (defn modais []
   (let [modal @(rf/subscribe [:modal])]
@@ -450,4 +492,6 @@
         :editar-entrada  [modal-entrada (:dados modal)]
         :novo-template   [modal-template (:dados modal)]
         :editar-template [modal-template (:dados modal)]
+        :pagamento-fatura [modal-pagamento-fatura (:dados modal)]
         nil))))
+

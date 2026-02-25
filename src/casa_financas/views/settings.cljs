@@ -28,9 +28,9 @@
     "Sair da conta"]])
 
 (def paleta-cores
-  ["#3B82F6" "#EC4899" "#14B8A6" "#F97316" "#8B5CF6"
-   "#EF4444" "#10B981" "#F59E0B" "#6366F1" "#84CC16"
-   "#06B6D4" "#E11D48" "#7C3AED" "#059669" "#DC2626"])
+  ["#2563EB" "#7C3AED" "#DB2777" "#DC2626" "#EA580C"
+   "#D97706" "#65A30D" "#966305" "#0891B2" "#eed428"
+   "#221e6e" "#380f5f" "#C026D3" "#0F766E" "#15803D"])
 
 (defn seletor-cor [pessoa-id aberto-atom]
   (fn []
@@ -44,11 +44,12 @@
                   :style {:background-color cor-atual}
                   :on-click #(reset! aberto-atom (if aberto? nil pessoa-id))}]
         (when aberto?
-          [:div {:class "absolute right-0 top-10 bg-white rounded-2xl shadow-lg border border-gray-100 p-2 z-50"}
-           [:div {:class "grid grid-cols-5 gap-1.5"}
+          [:div {:class "absolute right-0 top-10 bg-white rounded-2xl shadow-xl border border-gray-100 p-3 z-50"
+                 :style {:width "200px"}}
+           [:div {:class "grid grid-cols-5 gap-2"}
             (for [cor paleta-cores]
               ^{:key cor}
-              [:button {:class    (str "w-7 h-7 rounded-full border-2 transition-all "
+              [:button {:class    (str "w-8 h-8 rounded-full border-2 transition-all "
                                        (if (= cor cor-atual)
                                          "border-gray-800 scale-110"
                                          "border-transparent"))

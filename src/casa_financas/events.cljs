@@ -51,7 +51,8 @@
       :supabase/buscar-templates nil
       :supabase/buscar-historico nil
       :supabase/buscar-configuracoes nil
-      :supabase/buscar-categorias nil})))
+      :supabase/buscar-categorias nil
+      :supabase/buscar-fatura {:ano (:ano mes) :mes (:mes mes)}})))
 
 ;; -- Navegação --
 (rf/reg-event-db
@@ -187,18 +188,26 @@
 (rf/reg-event-fx
  :salvar-despesa
  (fn [{:keys [db]} [_ despesa]]
-   (let [existe?       (some #(= (:id %) (:id despesa)) (:despesas db))
+   (let [despesa-ajustada (if (= (:forma_pagamento despesa) "credito")
+                            (let [data-parts (clojure.string/split (:data_input despesa) #"-")
+                                  ano-c (int (first data-parts))
+                                  mes-c (int (second data-parts))
+                                  dia   (:dia_do_mes despesa)
+                                  periodo (u/mes-fatura dia mes-c ano-c)]
+                              (merge despesa periodo))
+                            despesa)
+         existe?       (some #(= (:id %) (:id despesa-ajustada)) (:despesas db))
          novo-db       (update db :despesas
                                (fn [ds]
                                  (if existe?
-                                   (mapv (fn [d] (if (= (:id d) (:id despesa)) despesa d)) ds)
-                                   (conj (vec ds) despesa))))
+                                   (mapv (fn [d] (if (= (:id d) (:id despesa-ajustada)) despesa-ajustada d)) ds)
+                                   (conj (vec ds) despesa-ajustada))))
          mes           (:mes-atual db)
-         entradas-auto (when (:pago despesa)
-                         (gerar-entradas-bolso despesa mes))]
+         entradas-auto (when (:pago despesa-ajustada)
+                         (gerar-entradas-bolso despesa-ajustada mes))]
      (merge
       {:db                      (assoc novo-db :modal nil)
-       :supabase/salvar-despesa despesa}
+       :supabase/salvar-despesa despesa-ajustada}
       (when (seq entradas-auto)
         {:dispatch-n (mapv (fn [e] [:salvar-entrada e]) entradas-auto)})))))
 
@@ -470,3 +479,92 @@
  (fn [categoria]
    (supa/salvar-categoria! categoria
                            (fn [] (rf/dispatch [:carregar-dados])))))
+
+
+;; -- Fatura --
+(rf/reg-event-db
+ :set-fatura
+ (fn [db [_ fatura]]
+   (assoc db :fatura fatura)))
+
+(rf/reg-event-fx
+ :salvar-pagamento-fatura
+ (fn [{:keys [db]} [_ valor-pago]]
+   (let [mes        (:mes-atual db)
+         fatura     (:fatura db)
+         despesas   (:despesas db)
+         creditos   (filter #(= (:forma_pagamento %) "credito") despesas)
+         total      (reduce + 0 (map :valor creditos))
+         pago-total? (>= valor-pago total)
+         soma-div   (fn [pessoa-key]
+                      (reduce + 0 (map (fn [d]
+                                         (* (:valor d)
+                                            (/ (get d pessoa-key 0) 100)))
+                                       creditos)))
+         div-andre    (if (> total 0) (* 100 (/ (soma-div :divisao_andre) total)) 25)
+         div-bianca   (if (> total 0) (* 100 (/ (soma-div :divisao_bianca) total)) 25)
+         div-fernanda (if (> total 0) (* 100 (/ (soma-div :divisao_fernanda) total)) 25)
+         div-bruna    (if (> total 0) (* 100 (/ (soma-div :divisao_bruna) total)) 25)
+         nova-fatura  {:id               (or (:id fatura) (str (random-uuid)))
+                       :ano              (:ano mes)
+                       :mes              (:mes mes)
+                       :valor_total      total
+                       :valor_pago       valor-pago
+                       :divisao_andre    div-andre
+                       :divisao_bianca   div-bianca
+                       :divisao_fernanda div-fernanda
+                       :divisao_bruna    div-bruna}
+         ;; Se pago total, marca todas despesas de crédito como pagas
+         novo-db (cond-> db
+                   true        (assoc :fatura nova-fatura :modal nil)
+                   pago-total? (update :despesas
+                                       (fn [ds]
+                                         (mapv (fn [d]
+                                                 (if (= (:forma_pagamento d) "credito")
+                                                   (assoc d :pago true)
+                                                   d))
+                                               ds))))]
+     {:db                     novo-db
+      :supabase/salvar-fatura nova-fatura})))
+
+(rf/reg-fx
+ :supabase/buscar-fatura
+ (fn [{:keys [ano mes]}]
+   (supa/buscar-fatura! ano mes
+    (fn [fatura]
+      (rf/dispatch [:set-fatura fatura])))))
+
+(rf/reg-fx
+ :supabase/salvar-fatura
+ (fn [fatura]
+   (supa/salvar-fatura! fatura
+    (fn [err]
+      (when err
+        (rf/dispatch [:set-erro "Erro ao salvar fatura"]))))))
+
+(rf/reg-event-fx
+ :desmarcar-fatura
+ (fn [{:keys [db]} _]
+   (let [mes         (:mes-atual db)
+         fatura      (:fatura db)
+         nova-fatura (assoc fatura :valor_pago 0)
+         novo-db     (-> db
+                         (assoc :fatura nova-fatura)
+                         (update :despesas
+                                 (fn [ds]
+                                   (mapv (fn [d]
+                                           (if (= (:forma_pagamento d) "credito")
+                                             (assoc d :pago false)
+                                             d))
+                                         ds))))]
+     {:db                          novo-db
+      :supabase/salvar-fatura      nova-fatura
+      :supabase/desmarcar-creditos {:ano (:ano mes) :mes (:mes mes)}})))
+
+(rf/reg-fx
+ :supabase/desmarcar-creditos
+ (fn [{:keys [ano mes]}]
+   (supa/desmarcar-creditos! ano mes
+                             (fn [err]
+                               (when err
+                                 (rf/dispatch [:set-erro "Erro ao desmarcar créditos"]))))))

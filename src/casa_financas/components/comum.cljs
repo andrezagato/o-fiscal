@@ -24,13 +24,13 @@
   (let [{:keys [andre bianca fernanda bruna]} divisao]
     [:div {:class "flex rounded-full overflow-hidden h-1.5 w-full"}
      (when (and andre (> andre 0))
-       [:div {:class "h-full" :style {:width (str andre "%") :background-color "#3B82F6"}}])
+       [:div {:class "h-full" :style {:width (str andre "%") :background-color (u/pessoa-cor "andre")}}])
      (when (and bianca (> bianca 0))
-       [:div {:class "h-full" :style {:width (str bianca "%") :background-color "#EC4899"}}])
+       [:div {:class "h-full" :style {:width (str bianca "%") :background-color (u/pessoa-cor "bianca")}}])
      (when (and fernanda (> fernanda 0))
-       [:div {:class "h-full" :style {:width (str fernanda "%") :background-color "#14B8A6"}}])
+       [:div {:class "h-full" :style {:width (str fernanda "%") :background-color (u/pessoa-cor "fernanda")}}])
      (when (and bruna (> bruna 0))
-       [:div {:class "h-full" :style {:width (str bruna "%") :background-color "#F97316"}}])]))
+       [:div {:class "h-full" :style {:width (str bruna "%") :background-color (u/pessoa-cor "bruna")}}])]))
 
 (defn seletor-mes []
   (let [mes-atual @(rf/subscribe [:mes-atual])]

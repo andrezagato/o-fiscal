@@ -80,3 +80,10 @@
 
 (defn soma-divisao [divisao]
   (reduce + 0 (vals divisao)))
+
+(defn mes-fatura [dia mes ano]
+  (if (<= dia 15)
+    {:mes mes :ano ano :mes_compra mes :ano_compra ano}
+    (if (= mes 12)
+      {:mes 1 :ano (inc ano) :mes_compra mes :ano_compra ano}
+      {:mes (inc mes) :ano ano :mes_compra mes :ano_compra ano})))

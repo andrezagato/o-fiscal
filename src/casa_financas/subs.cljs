@@ -50,12 +50,6 @@
    (reduce + 0 (map :valor despesas))))
 
 (rf/reg-sub
- :total-pago-mes
- :<- [:despesas-do-mes]
- (fn [despesas _]
-   (reduce + 0 (map :valor (filter :pago despesas)))))
-
-(rf/reg-sub
  :total-entradas-mes
  :<- [:entradas-do-mes]
  (fn [entradas _]
@@ -125,3 +119,20 @@
           "fernanda" "#14B8A6"
           "bruna"    "#F97316"
           "#9CA3AF"))))
+
+(rf/reg-sub :fatura (fn [db _] (:fatura db)))
+
+(rf/reg-sub
+ :total-credito-mes
+ :<- [:despesas-do-mes]
+ (fn [despesas _]
+   (reduce + 0 (map :valor (filter #(= (:forma_pagamento %) "credito") despesas)))))
+
+(rf/reg-sub
+ :total-pago-mes
+ :<- [:despesas-do-mes]
+ :<- [:fatura]
+ (fn [[despesas fatura] _]
+   (let [pago-pix (reduce + 0 (map :valor (filter #(and (:pago %) (not= (:forma_pagamento %) "credito")) despesas)))
+         pago-fatura (or (:valor_pago fatura) 0)]
+     (+ pago-pix pago-fatura))))
