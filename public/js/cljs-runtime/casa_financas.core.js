@@ -18,9 +18,9 @@ return re_frame.core.dispatch(new cljs.core.PersistentVector(null, 3, 5, cljs.co
 });
 casa_financas.core.tela_ativa = (function casa_financas$core$tela_ativa(){
 var aba = cljs.core.deref(re_frame.core.subscribe.cljs$core$IFn$_invoke$arity$1(new cljs.core.PersistentVector(null, 1, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.Keyword(null,"aba-ativa","aba-ativa",1507807669)], null)));
-var G__28926 = aba;
-var G__28926__$1 = (((G__28926 instanceof cljs.core.Keyword))?G__28926.fqn:null);
-switch (G__28926__$1) {
+var G__12490 = aba;
+var G__12490__$1 = (((G__12490 instanceof cljs.core.Keyword))?G__12490.fqn:null);
+switch (G__12490__$1) {
 case "dashboard":
 return new cljs.core.PersistentVector(null, 1, 5, cljs.core.PersistentVector.EMPTY_NODE, [casa_financas.views.dashboard.dashboard], null);
 
