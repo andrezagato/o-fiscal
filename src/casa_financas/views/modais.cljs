@@ -93,10 +93,10 @@
 (defn seletor-pagadores [pagadores on-change]
   [:div {:class "flex gap-1.5 flex-wrap"}
    (for [pid pessoas-ids]
-     ^{:key pid}
      (let [selecionado (some #(= % pid) pagadores)
            cor         (u/pessoa-cor pid)
            label       (if (= pid "conjunta") "Casa" (u/pessoa-inicial pid))]
+       ^{:key pid}
        [:button {:class "w-9 h-9 rounded-full text-xs font-bold border-2 transition-colors flex items-center justify-center"
                  :style (if selecionado
                           {:background-color cor :border-color cor :color "white"}

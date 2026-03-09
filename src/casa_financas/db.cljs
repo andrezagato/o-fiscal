@@ -12,6 +12,7 @@
    :categorias           []
    :despesas-historico   []
    :entradas-historico   []
+   :faturas-historico    []
    :modal                nil
    :loading              false
    :erro                 nil

@@ -122,6 +122,7 @@
   (let [row #js {:id                      (:id template)
                  :descricao               (:descricao template)
                  :valor_padrao            (:valor_padrao template)
+                 :dia_padrao              (:dia_padrao template)
                  :forma_pagamento_padrao  (:forma_pagamento_padrao template)
                  :pagador_padrao          (clj->js (:pagador_padrao template))
                  :divisao_andre           (get-in template [:divisao :andre] 0)
@@ -221,6 +222,14 @@
                     :ordem (:ordem categoria)})
       (.then #(callback))
       (.catch #(js/console.error "Erro ao salvar categoria" %))))
+
+(defn buscar-todas-faturas! [callback]
+  (-> (.from client "fatura_cartao")
+      (.select "*")
+      (.then (fn [res]
+               (let [data (js->clj (.-data res) :keywordize-keys true)]
+                 (callback data))))
+      (.catch #(js/console.error "Erro ao buscar historico faturas" %))))
 
 (defn buscar-fatura! [ano mes callback]
   (-> (.from client "fatura_cartao")

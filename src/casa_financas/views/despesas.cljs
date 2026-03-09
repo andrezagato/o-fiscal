@@ -10,14 +10,17 @@
         status     (cond
                      (and (> total 0) (>= total-pago total)) :paga
                      (> total-pago 0)                        :parcial
-                     :else                                    :pendente)]
+                     :else                                    :pendente)
+        categorias @(rf/subscribe [:categorias])
+        cat        (first (filter #(= (:id %) (:categoria_id despesa)) categorias))]
     [:div {:class    "flex items-center gap-2 px-3 py-2 border-b border-gray-100 last:border-0"
            :on-click #(rf/dispatch [:abrir-modal :editar-despesa despesa])}
      [:div {:class "flex flex-col items-center w-8 flex-shrink-0"}
       [:span {:class "text-xs font-bold text-gray-500 leading-none"}
        (str (or (:mes_compra despesa) (:mes despesa)) "/" (:dia_do_mes despesa))]]
      [:div {:class "w-px h-6 bg-gray-200 flex-shrink-0"}]
-     [:div {:class "flex-1 min-w-0"}
+     [:div {:class "flex-1 min-w-0 flex items-center gap-1"}
+      (when cat [:span {:class "text-xs flex-shrink-0"} (:emoji cat)])
       [:p {:class (str "text-sm truncate "
                        (if (= status :paga) "line-through text-gray-400" "text-gray-700"))}
        (:descricao despesa)]]
@@ -84,6 +87,8 @@
 
 (defn item-despesa [despesa]
   (let [status (u/despesa-status despesa)
+        categorias @(rf/subscribe [:categorias])
+        cat        (first (filter #(= (:id %) (:categoria_id despesa)) categorias))
         [bg-class border-class] (case status
                                   :paga     ["bg-green-50" "border-green-100"]
                                   :vencida  ["bg-red-50"   "border-red-200"]
@@ -106,6 +111,7 @@
                   :style {:background-color (str (u/pessoa-cor pid) "20")
                           :color            (u/pessoa-cor pid)}}
            (if (= pid "conjunta") "Casa" (u/pessoa-inicial pid))])
+        (when cat [:span {:class "text-xs"} (:emoji cat)])
         [:span {:class "text-xs text-gray-400"} "pix"]
         (when (= status :vencida)
           [:span {:class "text-xs text-red-500 font-medium"} "atrasada"])]]

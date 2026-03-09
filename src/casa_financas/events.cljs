@@ -107,10 +107,11 @@
 
 (rf/reg-event-db
  :set-historico
- (fn [db [_ despesas entradas]]
+ (fn [db [_ despesas entradas faturas]]
    (assoc db
           :despesas-historico despesas
-          :entradas-historico entradas)))
+          :entradas-historico entradas
+          :faturas-historico (or faturas []))))
 
 
 (rf/reg-event-db
@@ -422,7 +423,9 @@
     (fn [despesas]
       (supa/buscar-todas-entradas!
        (fn [entradas]
-         (rf/dispatch [:set-historico despesas entradas])))))))
+         (supa/buscar-todas-faturas!
+          (fn [faturas]
+            (rf/dispatch [:set-historico despesas entradas faturas])))))))))
 
 (rf/reg-fx
  :dispatch-n
