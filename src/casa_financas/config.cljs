@@ -11,3 +11,7 @@
 
 (def supabase-url "https://tilsvgujcjrexrmoktgv.supabase.co")
 (def supabase-anon-key "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbHN2Z3VqY2pyZXhybW9rdGd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NDM2MTksImV4cCI6MjA4NzIxOTYxOX0.4Dd-68_2kx4sqgVH8qBFc8pvhgTczZtgQnTsSyAeIkA")
+
+;; Gerado com: npx web-push generate-vapid-keys
+;; Cole aqui a chave pública gerada e adicione a privada nas env vars do Vercel
+(def vapid-public-key "BKsrtOzi9u9qa5XYosSCrs6w3bv1y7OWF8TDGBezYzIepqK00v1f01rMkt0AcxZdK-z1KSzqCz7SzVDGwZ9y6Q4")

@@ -74,5 +74,7 @@
       [login/login])))
 
 (defn init []
+  (when (.-serviceWorker js/navigator)
+    (.register (.-serviceWorker js/navigator) "/sw.js"))
   (rf/dispatch-sync [:initialize-db])
   (rdom/render [app] (.getElementById js/document "app")))

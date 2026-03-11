@@ -207,6 +207,15 @@
       (.catch #(js/console.error "Erro ao salvar configuracao" %))))
 
 
+;; -- Push Subscriptions --
+(defn salvar-push-subscription! [user-id subscription callback]
+  (-> (.from client "push_subscriptions")
+      (.upsert #js {:user_id     user-id
+                    :subscription (clj->js subscription)
+                    :updated_at  (.toISOString (js/Date.))})
+      (.then #(callback nil))
+      (.catch #(callback {:error %}))))
+
 (defn buscar-categorias! [callback]
   (-> (.from client "categorias")
       (.select "*")

@@ -2,7 +2,8 @@
   (:require [re-frame.core :as rf]
             [reagent.core :as r]
             [casa-financas.utils :as u]
-            [casa-financas.components.comum :as c]))
+            [casa-financas.components.comum :as c]
+            [casa-financas.notifications :as notif]))
 
 (def pessoas-ids ["andre" "bianca" "fernanda" "bruna"])
 
@@ -69,10 +70,47 @@
         [seletor-cor "fernanda" aberto]
         [seletor-cor "bruna" aberto]]])))
 
+(defn secao-notificacoes []
+  (let [status (r/atom (notif/permission))]
+    (fn []
+      [:div {:class "bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3"}
+       [:h3 {:class "font-bold text-gray-800 mb-3"} "Notificações"]
+       (cond
+         (not (notif/supported?))
+         [:p {:class "text-sm text-gray-500"}
+          "Abra o app pela tela inicial do iPhone para ativar notificações."]
+
+         (= @status "granted")
+         [:div {:class "flex items-center gap-2"}
+          [:span {:class "text-green-600 text-sm font-medium"} "✓ Notificações ativadas"]
+          [:button {:class    "ml-auto text-xs text-blue-500 underline"
+                    :on-click (fn []
+                                (notif/setup-push!
+                                 (fn [sub]
+                                   (rf/dispatch [:salvar-push-subscription
+                                                 sub
+                                                 (:id @(rf/subscribe [:usuario-atual]))]))
+                                 #(js/console.error "Push error" %)))}
+           "Renovar"]]
+
+         :else
+         [:button {:class    "w-full py-3 px-4 rounded-xl font-semibold text-blue-600 bg-blue-50 active:bg-blue-100 transition-colors"
+                   :on-click (fn []
+                               (notif/setup-push!
+                                (fn [sub]
+                                  (reset! status "granted")
+                                  (rf/dispatch [:salvar-push-subscription
+                                                sub
+                                                (:id @(rf/subscribe [:usuario-atual]))]))
+                                (fn [err]
+                                  (js/console.error "Push error" err))))}
+          "🔔 Ativar Notificações"])])))
+
 (defn settings []
   [:div {:class "flex flex-col pb-24"}
    [:div {:class "px-4 py-3 bg-white border-b border-gray-100"}
     [:h1 {:class "font-bold text-gray-800 text-lg"} "Configurações"]]
    [:div {:class "p-4"}
-    [secao-cores] 
+    [secao-cores]
+    [secao-notificacoes]
     [secao-conta]]])

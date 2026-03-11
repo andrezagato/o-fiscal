@@ -1,7 +1,17 @@
 {
   "outputDirectory": "public",
   "buildCommand": "",
-  "installCommand": "",
+  "installCommand": "npm install",
+  "crons": [
+    {
+      "path": "/api/cron-summary",
+      "schedule": "0 12 * * 1,4"
+    },
+    {
+      "path": "/api/cron-summary",
+      "schedule": "0 0 * * 2,5"
+    }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]

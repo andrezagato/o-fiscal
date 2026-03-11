@@ -467,6 +467,20 @@
     (fn [cats]
       (rf/dispatch [:set-categorias cats])))))
 
+;; -- Push Subscriptions --
+(rf/reg-event-fx
+ :salvar-push-subscription
+ (fn [_ [_ subscription user-id]]
+   {:supabase/salvar-push-subscription {:user-id user-id :subscription subscription}}))
+
+(rf/reg-fx
+ :supabase/salvar-push-subscription
+ (fn [{:keys [user-id subscription]}]
+   (supa/salvar-push-subscription! user-id subscription
+                                   (fn [err]
+                                     (when err
+                                       (js/console.error "Erro ao salvar push subscription" err))))))
+
 (rf/reg-event-db
  :set-categorias
  (fn [db [_ cats]]
